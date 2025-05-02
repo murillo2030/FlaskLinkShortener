@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Link Shortener</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            text-align: center;
+            padding-top: 50px;
+        }
+        
+        h1 {
+            color: #333;
+        }
+        
+        form {
+            display: inline-block;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        label {
+            font-size: 18px;
+            margin-top: 10px;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background-color: #218838;
+        }
+        
+        p {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Link Shortener</h1>
+
+<form id="link-form" action="/" method="post">
+  <label for="original-link">Enter a long URL:</label><br>
+  <input type="text" id="original-link" name="original-link"><br><br>
+  <button type="submit">Shorten Link</button>
+</form>
+<p id="message" style="color: red; font-family: Arial, Helvetica, sans-serif;">{{ message }}</p>
+<p id="shortened-link" tabindex="0" style="-webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text;">{{ shortened_link }}</p>
+<p><a href="http://{{ full_link }}"><img style="width: 25px; height: 25px;" src="{{ url_for('static', filename='images/go.webp')}}"></a></p>
+<script>
+    document.getElementById('shortened-link').addEventListener('click', function() {
+        const text = document.getElementById('shortened-link').innerText;
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert('Text copied to clipboard!');
+    });
+</script>
+</body>
+</html>
