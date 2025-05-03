@@ -113,7 +113,7 @@ def index_get():
 @app.route("/", methods=["POST"])
 # @limiter.limit("5 per minute")
 def index_post():
-    standard_host = f"localhost:{ request.host.split(":")[1] }"
+    standard_host = f"{ request.remote_addr }:{ request.host.split(":")[1] }"
 
     long_link: str = request.form.get("original-link")
     if not long_link:
