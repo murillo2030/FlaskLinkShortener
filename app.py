@@ -4,16 +4,16 @@ import re
 import sqlite3
 import string
 from flask import Flask, g, request, redirect, render_template, url_for
-from flask_limiter import Limiter
+# from flask_limiter import Limiter
 
 
 
 DATABASE = "database.db"
 app = Flask(__name__)
-limiter = Limiter(
-    key_func=lambda: request.remote_addr,
-    app=app,
-)
+# limiter = Limiter(
+#    key_func=lambda: request.remote_addr,
+#    app=app,
+#)
 
 
 def get_database():
@@ -111,7 +111,7 @@ def index_get():
 
 
 @app.route("/", methods=["POST"])
-@limiter.limit("5 per minute")
+# @limiter.limit("5 per minute")
 def index_post():
     standard_host = f"localhost:{ request.host.split(":")[1] }"
 
