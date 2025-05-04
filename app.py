@@ -135,11 +135,11 @@ def index_post():
 
 
 @app.route("/<shor_link_code>", methods=["GET"])
-def redirecting(shor_link_code):
+def redirecting(shor_link_code: str):
     if shor_link_code:
         long_link = is_long_link_in_db(shor_link_code)
         if long_link:
             return redirect(long_link)
-        return redirect(url_for("index"))
+        return redirect(url_for("index_get"))
 
 
