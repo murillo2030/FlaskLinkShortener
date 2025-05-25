@@ -18,7 +18,7 @@ if KEY is None:
 KEY = str(KEY).encode()
 
 def startup_check():
-    if not os.path.exists(f"{ TEMPORARY_DATABASE }"):
+    if not os.path.exists(f"{ TEMPORARY_DATABASE }") or not os.path.exists(f"{ ENCRYPTED_DATABASE }"):
         raise FileExistsError(f"ERROR: { TEMPORARY_DATABASE }/{ ENCRYPTED_DATABASE } doesn't exist !!")
     
 startup_check()
