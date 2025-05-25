@@ -17,11 +17,6 @@ if KEY is None:
     raise ValueError("SECRET_KEY environment variable not set!")
 KEY = str(KEY).encode()
 
-def startup_check():
-    if not os.path.exists(f"{ TEMPORARY_DATABASE }") or not os.path.exists(f"{ ENCRYPTED_DATABASE }"):
-        raise FileExistsError(f"ERROR: { TEMPORARY_DATABASE }/{ ENCRYPTED_DATABASE } doesn't exist !!")
-    
-startup_check()
 
 cipher = Fernet(KEY)
 
