@@ -16,7 +16,13 @@ KEY = os.environ.get("SECRET_KEY")
 if KEY is None:
     raise ValueError("SECRET_KEY environment variable not set!")
 KEY = str(KEY).encode()
+
+def startup_check():
+    if not os.path.exists(f"{ TEMPORARY_DATABASE }"):
+        raise FileExistsError(f"ERROR: { TEMPORARY_DATABASE }/{ ENCRYPTED_DATABASE } doesn't exist !!")
     
+startup_check()
+
 cipher = Fernet(KEY)
 
 
@@ -87,7 +93,6 @@ def initialize_database():
         db.close()
         
         encrypt_db()
-
 
 
 @app.cli.command("initdb")
