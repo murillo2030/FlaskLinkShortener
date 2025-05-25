@@ -12,9 +12,11 @@ from flask import Flask, g, request, redirect, render_template, url_for
 
 ENCRYPTED_DATABASE = "enc_database.db"
 TEMPORARY_DATABASE = "temp_database.db"
-KEY = str(os.environ.get("SECRET_KEY")).encode()
+KEY = os.environ.get("SECRET_KEY")
 if KEY is None:
     raise ValueError("SECRET_KEY environment variable not set!")
+KEY = str(KEY).encode()
+    
 cipher = Fernet(KEY)
 
 

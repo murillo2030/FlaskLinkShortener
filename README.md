@@ -67,7 +67,20 @@ $ pip install -r requirements.txt
 
 ## 🎈 Usage <a name="usage"></a>
 
-First of all enter into your virtual envinroment, if you don't know how go to - [Getting Started](#getting_started)
+First step is get in to your virtual envinroment, if you don't know how go to - [Getting Started](#getting_started)
+
+Second step is set the local variable (SECRET_KEY) for database encryption purposes
+### Windows
+```
+$ $env:SECRET_KEY = "<YOUR_SECRET_KEY>"
+```
+
+### Linux
+```
+$ set SECRET_KEY=<YOUR_SECRET_KEY>
+```
+**The SECRET_KEY need to be a 32 url-safe base64 bytes, like that** ```mZ1Wv0TRoG5pL7klT9oYbVv9XBbkIPhPTfBQsyvVr0k=```
+
 
 Use that command for initialize the database
 ```
