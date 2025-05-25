@@ -141,5 +141,13 @@ def redirecting(shor_link_code: str):
         if long_link:
             return redirect(long_link)
         return redirect(url_for("index_get"))
+    
+
+@app.route("/get/link/<shor_link_code>")
+def get_link(shor_link_code: str):
+    link = is_long_link_in_db(shor_link_code)
+    if link:
+        return f"<p id='link'> { link } </p>"
+    return f""
 
 
