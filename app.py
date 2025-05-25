@@ -1,25 +1,53 @@
 import inspect
+import os
 import random
 import re
 import sqlite3
 import string
+from cryptography.fernet import Fernet
 from flask import Flask, g, request, redirect, render_template, url_for
 # from flask_limiter import Limiter
 
 
 
-DATABASE = "database.db"
+ENCRYPTED_DATABASE = "enc_database.db"
+TEMPORARY_DATABASE = "temp_database.db"
+KEY = str(os.environ.get("SECRET_KEY")).encode()
+if KEY is None:
+    raise ValueError("SECRET_KEY environment variable not set!")
+cipher = Fernet(KEY)
+
+
 app = Flask(__name__)
 # limiter = Limiter(
 #    key_func=lambda: request.remote_addr,
 #    app=app,
 #)
 
+def decrypt_db():
+    with open(ENCRYPTED_DATABASE, 'rb') as f:
+        encryped_data = f.read()
+
+    decrypted_data = cipher.decrypt(encryped_data)
+    with open(TEMPORARY_DATABASE, 'wb') as f:
+        f.write(decrypted_data)
+
+
+def encrypt_db():
+    with open(TEMPORARY_DATABASE, 'rb') as f:
+        decrypted_data = f.read()
+    
+    encrypted_data = cipher.encrypt(decrypted_data)
+    with open(ENCRYPTED_DATABASE, 'wb') as f:
+        f.write(encrypted_data)
+    
+    os.remove(TEMPORARY_DATABASE)
+
 
 def get_database():
     db = getattr(g, "_database", None)
     if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
+        db = g._database = sqlite3.connect(TEMPORARY_DATABASE)
     return db
 
 
@@ -27,6 +55,18 @@ def close_database():
     db = getattr(g, "_database", None)
     if db is not None:
         db.close()
+
+@app.before_request
+def before_request():
+    decrypt_db()
+
+
+@app.teardown_request
+def teardown_request(exception=None):
+    db = g.pop('_database', None)
+    if db is not None:
+        db.close()
+    encrypt_db()
 
 
 @app.teardown_appcontext
@@ -37,9 +77,15 @@ def teardown_db(e):
 def initialize_database():
     with app.app_context():
         db = get_database()
+        
         with app.open_resource("schema.sql", mode="r") as f:
             db.cursor().executescript(f.read())
         db.commit()
+
+        db.close()
+        
+        encrypt_db()
+
 
 
 @app.cli.command("initdb")
