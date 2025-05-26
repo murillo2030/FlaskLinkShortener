@@ -157,7 +157,7 @@ def is_a_valid_url(link: str) -> bool:
 @app.route("/", methods=["GET"])
 def index_get():
 
-    standard_host = f"localhost:{ request.host.split(":")[1] }"
+    standard_host = request.host
 
     return render_template("index.html", short_link_code="", redirect_link=f"{ standard_host }", message="")
 
