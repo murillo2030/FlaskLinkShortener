@@ -6,12 +6,15 @@ import sqlite3
 import string
 from cryptography.fernet import Fernet
 from flask import Flask, g, request, redirect, render_template, url_for
+from Logs import Log
 # from flask_limiter import Limiter
 
 
 
 ENCRYPTED_DATABASE = "enc_database.db"
 TEMPORARY_DATABASE = "temp_database.db"
+LOG = Log()
+DB_INSERT = "DATABASE_INSERT"
 KEY = os.environ.get("SECRET_KEY")
 if KEY is None:
     raise ValueError("SECRET_KEY environment variable not set!")
@@ -97,13 +100,14 @@ def initdb_command():
     print("Initialized the database.")
 
 
-def add_to_database(long_link: str, short_link: str) -> bool:
+def add_to_database(long_link: str, short_link_code: str) -> bool:
     try:
         db = get_database()
         cursor = db.cursor()
         query = "INSERT INTO links (long_link, short_link_code) VALUES (?, ?)"
-        rows = cursor.execute(query, [long_link, short_link])
+        rows = cursor.execute(query, [long_link, short_link_code])
         db.commit()
+        LOG.create_log(f"Long link: { long_link }\nShort link code: { short_link_code }", DB_INSERT)
         return True
     except Exception as e:
         function_name = inspect.currentframe().f_code.co_name
