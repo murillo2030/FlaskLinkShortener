@@ -11,14 +11,14 @@ class Log():
         if not os.path.exists("./logs"):
             os.mkdir("./logs")
     
+    
     def __update_log_name__(self, operation: str):
         self.__update_prefix__()
         self.__update_suffix__()
         self.__log_name__ = f"./logs/{ self.__log_prefix__ }_{ self.__log_suffix__ }_{ operation if operation else '' }.txt"
-        print(self.__log_name__)
-        
+
+
     def create_log(self, message: str, operation: str = None) -> bool:
-        print(self.__log_name__)
         try:
             self.__update_log_name__(operation)
             with open(self.__log_name__, 'x') as fp:
@@ -31,10 +31,12 @@ class Log():
             print(f"Error ({ e }): error when creating log file")
             return False
 
+
     def __update_suffix__(self):
         self.__log_suffix__ = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.__log_suffix__ = f'{ self.__log_suffix__ }'
-    
+
+
     def __update_prefix__(self):
         self.__update_timestamp__()
         self.__log_prefix__ = f'logfile_{ self.__timestamp__ }'
