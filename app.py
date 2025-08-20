@@ -11,8 +11,8 @@ from Logs import Log
 
 
 
-ENCRYPTED_DATABASE = "enc_database.db"
-TEMPORARY_DATABASE = "temp_database.db"
+ENCRYPTED_DATABASE = "database.enc"
+TEMPORARY_DATABASE = "database.db"
 LOG = Log()
 DB_INSERT = "DATABASE_INSERT"
 KEY = os.environ.get("SECRET_KEY")
