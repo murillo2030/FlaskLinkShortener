@@ -153,6 +153,14 @@ def is_a_valid_url(link: str) -> bool:
         return True
     return False
 
+def is_a_valid_shor_link_code(shor_link_code: str) -> bool:
+    pattern = r'^[a-zA-Z0-9]{4}$'
+    patt_compiled = re.compile(pattern)
+    results = patt_compiled.findall(shor_link_code)
+    if len(results) > 0:
+        return True
+    return False
+
 
 @app.route("/", methods=["GET"])
 def index_get():
@@ -198,7 +206,8 @@ def redirecting(shor_link_code: str):
 @app.route("/get/link/<shor_link_code>")
 def get_link(shor_link_code: str):
     link = is_long_link_in_db(shor_link_code)
-    if link:
+    is_a_valid_short_code_link: bool = is_a_valid_shor_link_code(shor_link_code)
+    if link and is_a_valid_short_code_link:
         return f"<p id='link'> { link } </p>"
     return f""
 
