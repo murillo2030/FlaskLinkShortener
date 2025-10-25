@@ -4,25 +4,13 @@ import random
 import re
 import sqlite3
 import string
-from cryptography.fernet import Fernet
 from flask import Flask, g, request, redirect, render_template, url_for
-from Logs import Log
 # from flask_limiter import Limiter
 
 
 
-ENCRYPTED_DATABASE = "database.enc"
-TEMPORARY_DATABASE = "database.db"
-LOG = Log()
-DB_INSERT = "DATABASE_INSERT"
-KEY = os.environ.get("SECRET_KEY")
-if KEY is None:
-    raise ValueError("SECRET_KEY environment variable not set!")
-KEY = str(KEY).encode()
 
-
-cipher = Fernet(KEY)
-
+DATABASE = "database.db"
 
 app = Flask(__name__)
 # limiter = Limiter(
@@ -30,74 +18,39 @@ app = Flask(__name__)
 #    app=app,
 #)
 
-def decrypt_db():
-    with open(ENCRYPTED_DATABASE, 'rb') as f:
-        encryped_data = f.read()
 
-    decrypted_data = cipher.decrypt(encryped_data)
-    with open(TEMPORARY_DATABASE, 'wb') as f:
-        f.write(decrypted_data)
-
-
-def encrypt_db():
-    with open(TEMPORARY_DATABASE, 'rb') as f:
-        decrypted_data = f.read()
-    
-    encrypted_data = cipher.encrypt(decrypted_data)
-    with open(ENCRYPTED_DATABASE, 'wb') as f:
-        f.write(encrypted_data)
-    
-    os.remove(TEMPORARY_DATABASE)
-
-
-def get_database():
+def get_database() -> str | None:
     db = getattr(g, "_database", None)
     if db is None:
-        db = g._database = sqlite3.connect(TEMPORARY_DATABASE)
+        db = g._database = sqlite3.connect(DATABASE)
     return db
 
 
-def close_database():
+def close_database() -> None:
     db = getattr(g, "_database", None)
     if db is not None:
         db.close()
 
-@app.before_request
-def before_request():
-    decrypt_db()
-
-
-@app.teardown_request
-def teardown_request(exception=None):
-    db = g.pop('_database', None)
-    if db is not None:
-        db.close()
-    encrypt_db()
-
 
 @app.teardown_appcontext
-def teardown_db(e):
+def teardown_db(e) -> None:
     close_database()
 
 
-def initialize_database():
+def initialize_database() -> None:
     with app.app_context():
         db = get_database()
-        
         with app.open_resource("schema.sql", mode="r") as f:
             db.cursor().executescript(f.read())
         db.commit()
-
         db.close()
         
-        encrypt_db()
-
 
 @app.cli.command("initdb")
-def initdb_command():
+def initdb_command() -> None:
     """Initialize the database."""
     initialize_database()
-    print("Initialized the database.")
+    print("Database initialized.")
 
 
 def add_to_database(long_link: str, short_link_code: str) -> bool:
@@ -107,7 +60,6 @@ def add_to_database(long_link: str, short_link_code: str) -> bool:
         query = "INSERT INTO links (long_link, short_link_code) VALUES (?, ?)"
         rows = cursor.execute(query, [long_link, short_link_code])
         db.commit()
-        LOG.create_log(f"Long link: { long_link }\nShort link code: { short_link_code }", DB_INSERT)
         return True
     except Exception as e:
         function_name = inspect.currentframe().f_code.co_name
@@ -115,7 +67,7 @@ def add_to_database(long_link: str, short_link_code: str) -> bool:
         return False
 
 
-def gen_short_link_code() -> str:
+def generate_short_link_code() -> str:
     charset = string.ascii_letters + string.digits
     db = get_database()
     cursor = db.cursor()
@@ -147,16 +99,16 @@ def is_short_link_in_db(long_link: str) -> str:
 
 def is_a_valid_url(link: str) -> bool:
     pattern = r'((?:http(?:s)?://)?(?:\w+(?:\.|\:)[\w\W]+)+)'
-    patt_compiled = re.compile(pattern)
-    results = patt_compiled.findall(link)
+    pattern_object = re.compile(pattern)
+    results = pattern_object.findall(link)
     if len(results) > 0:
         return True
     return False
 
-def is_a_valid_shor_link_code(shor_link_code: str) -> bool:
-    pattern = r'^[a-zA-Z0-9]{4}$'
-    patt_compiled = re.compile(pattern)
-    results = patt_compiled.findall(shor_link_code)
+def is_a_valid_short_link(shor_link_code: str) -> bool:
+    pattern = r'[a-zA-Z0-9]{4}'
+    pattern_object = re.compile(pattern)
+    results = pattern_object.findall(shor_link_code)
     if len(results) > 0:
         return True
     return False
@@ -164,21 +116,18 @@ def is_a_valid_shor_link_code(shor_link_code: str) -> bool:
 
 @app.route("/", methods=["GET"])
 def index_get():
-
-    standard_host = request.host
-
+    standard_host = f"{ request.host }"
     return render_template("index.html", short_link_code="", redirect_link=f"{ standard_host }", message="")
 
 
 @app.route("/", methods=["POST"])
-# @limiter.limit("5 per minute")
 def index_post():
     standard_host = f"{ request.host }"
-
-    long_link: str = request.form.get("original-link")
+    long_link: str = request.form.get("long-link")
+    
     if not long_link:
         return redirect(url_for("index"))
-    
+
     if not is_a_valid_url(long_link):
         message = "Unrecognizable link"
         return render_template("index.html", short_link_code="", redirect_link=f"{ standard_host }", message=message)
@@ -186,29 +135,29 @@ def index_post():
     if short_link_code := is_short_link_in_db(long_link):
         return render_template("index.html", short_link_code=f'{ short_link_code }', redirect_link=f'{ standard_host }/{ short_link_code }', message="")
 
-    short_link_code: str = gen_short_link_code()
+    short_link_code: str = generate_short_link_code()
     if not add_to_database(long_link, short_link_code):
         message: str = "Oops! Something went wrong. Please try again later."
         return render_template("index.html", short_link_code="", message=message)
-    
+
     return render_template("index.html", short_link_code=f'{ short_link_code }', redirect_link=f'{ standard_host }/{ short_link_code }', message="")
 
 
-@app.route("/<shor_link_code>", methods=["GET"])
-def redirecting(shor_link_code: str):
-    if shor_link_code:
-        long_link = is_long_link_in_db(shor_link_code)
+@app.route("/<short_link_code>", methods=["GET"])
+def redirecting(short_link_code: str):
+    if is_a_valid_short_link(short_link_code):
+        long_link = is_long_link_in_db(short_link_code)
         if long_link:
             return redirect(long_link)
-        return redirect(url_for("index_get"))
+    return redirect(url_for("index_get"))
     
 
-@app.route("/get/link/<shor_link_code>")
-def get_link(shor_link_code: str):
-    link = is_long_link_in_db(shor_link_code)
-    is_a_valid_short_code_link: bool = is_a_valid_shor_link_code(shor_link_code)
-    if link and is_a_valid_short_code_link:
-        return f"<p id='link'> { link } </p>"
+@app.route("/get/link/<short_link_code>")
+def get_link(short_link_code: str):
+    if is_a_valid_short_link(short_link_code):
+        link = is_long_link_in_db(short_link_code)
+        if link:
+            return f"<p id='link'> { link } </p>"
     return f""
 
 

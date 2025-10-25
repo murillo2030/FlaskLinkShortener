@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}"
+    <meta charset="utf-8">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
     <title>Link Shortener</title>
     <style>
         body {
@@ -65,13 +65,13 @@
 <h1>Link Shortener</h1>
 
 <form id="link-form" action="/" method="post">
-  <label for="original-link">Enter a long URL:</label><br>
-  <input type="text" id="original-link" name="original-link"><br><br>
-  <button type="submit">Shorten Link</button>
+  <label for="long-link">Enter URL</label><br>
+  <input type="text" id="long-link" name="long-link"><br><br>
+  <button type="submit">Short Link</button>
 </form>
-<p id="message" style="color: red; font-family: Arial, Helvetica, sans-serif;">{{ message }}</p>
+{% if message %}<p id="message" style="color: red; font-family: Arial, Helvetica, sans-serif;">{{ message }}</p>{% endif %}
 <p id="short_link_code">{{ short_link_code }}</p>
-<p><a href="http://{{ redirect_link }}"><img style="width: 25px; height: 25px;" src="{{ url_for('static', filename='images/go.webp')}}"></a></p>
+<p><a href="http://{{ redirect_link }}"><img style="width: 25px; height: 25px;" src="{{ url_for('static', filename='images/go.webp') }}"></a></p>
 <script>
     document.getElementById('short_link_code').addEventListener('click', function() {
         const text = document.getElementById('short_link_code').innerText;
@@ -81,7 +81,7 @@
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        alert('Text copied to clipboard!');
+        alert('Link shared to clipboard!');
     });
 </script>
 </body>
