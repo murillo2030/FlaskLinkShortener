@@ -6,6 +6,7 @@ import sqlite3
 import string
 from flask import Flask, g, request, redirect, render_template, url_for
 # from flask_limiter import Limiter
+# from flask_limiter.util import get_remote_address
 
 
 
@@ -14,9 +15,11 @@ DATABASE = "database.db"
 
 app = Flask(__name__)
 # limiter = Limiter(
-#    key_func=lambda: request.remote_addr,
+#    get_remote_address,
 #    app=app,
-#)
+#    storage_uri="redis://localhost:6379",
+#    storage_options={"socket_connect_timeout": 30},
+# )
 
 
 def get_database() -> str | None:
@@ -115,12 +118,14 @@ def is_a_valid_short_link(shor_link_code: str) -> bool:
 
 
 @app.route("/", methods=["GET"])
+# @limiter.limit("120 per minute")
 def index_get():
     standard_host = f"{ request.host }"
     return render_template("index.html", short_link_code="", redirect_link=f"{ standard_host }", message="")
 
 
 @app.route("/", methods=["POST"])
+# @limiter.limit("5 per minute")
 def index_post():
     standard_host = f"{ request.host }"
     long_link: str = request.form.get("long-link")
@@ -144,6 +149,7 @@ def index_post():
 
 
 @app.route("/<short_link_code>", methods=["GET"])
+# @limiter.limit("15 per minute")
 def redirecting(short_link_code: str):
     if is_a_valid_short_link(short_link_code):
         long_link = is_long_link_in_db(short_link_code)
@@ -153,6 +159,7 @@ def redirecting(short_link_code: str):
     
 
 @app.route("/get/link/<short_link_code>")
+# @limiter.limit("15 per minute")
 def get_link(short_link_code: str):
     if is_a_valid_short_link(short_link_code):
         link = is_long_link_in_db(short_link_code)
