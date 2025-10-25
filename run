@@ -1,4 +1,4 @@
-if [ -f ./database.enc ]; then
+if [ -f ./database.db ]; then
     waitress-serve --listen=0.0.0.0:8080 app:app
 else
     flask initdb
